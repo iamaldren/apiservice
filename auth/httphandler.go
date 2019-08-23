@@ -65,7 +65,7 @@ func SetData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data Data
-	json.Unmarshal(body, data)
+	json.Unmarshal(body, &data)
 
 	err = client.Set(data.Key, data.Value, 0).Err()
 	if err != nil {
