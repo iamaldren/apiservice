@@ -2,7 +2,6 @@ package auth
 
 import (
 	"apiservice/config"
-	"apiservice/customutil"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
@@ -68,5 +67,21 @@ func SetData(w http.ResponseWriter, r *http.Request) {
 	var data Data
 	json.Unmarshal(body, data)
 
-	client.Set("test", customutil.FormatJsonForRedis(string(body)), 0)
+	err = client.Set(data.Key, data.Value, 0).Err()
+	if err != nil {
+		fmt.Println("Error encountered in storing data to Redis.")
+		var status Status
+		status.StatusCode = 400
+		status.StatusDesc = "Bad Request"
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(status)
+	} else {
+		var status Status
+		status.StatusCode = 200
+		status.StatusDesc = "Success"
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(status)
+	}
 }
