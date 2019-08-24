@@ -11,10 +11,11 @@ import (
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/v1/get/{data}", auth.GetData).Methods("GET")
+	router.HandleFunc("/v1/get/{key}", auth.GetData).Methods("GET")
 	router.HandleFunc("/v1/set", auth.SetData).Methods("POST")
 
-	router.HandleFunc("/v1/zadd/{table}", auth.ZAddData).Methods("POST")
+	router.HandleFunc("/v1/zset/{table}", auth.ZAddData).Methods("POST")
+	router.HandleFunc("/v1/zgetall/{table}", auth.ZRangeByScoreGetAll).Methods("GET")
 
 	err := http.ListenAndServe(":8080", router)
 	if err != nil {

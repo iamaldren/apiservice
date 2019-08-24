@@ -12,11 +12,6 @@ import (
 	"runtime/debug"
 )
 
-type Message struct {
-	PassedData string `json:"passedData"`
-	StoredData string `json:"storedData"`
-}
-
 type Status struct {
 	StatusCode int `json:"statusCode"`
 	StatusDesc string `json:"statusDesc"`
@@ -30,27 +25,20 @@ type Data struct {
 func GetData(w http.ResponseWriter, r *http.Request) {
 	client := config.GetRedisClient()
 
-	data := mux.Vars(r)["data"]
+	key := mux.Vars(r)["key"]
 
-	result, err := client.Get(data).Result()
+	result, err := client.Get(key).Result()
 	if err == redis.Nil {
-		fmt.Println("Data doesn't exists in Redis")
-		var status Status
-		status.StatusCode = 404
-		status.StatusDesc = "Record Not Found"
-
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(status)
+		recordIsNil(err, w)
 	} else if err != nil {
-		debug.PrintStack()
-		panic(err)
+		triggerErr(err)
 	} else {
-		var message Message
-		message.PassedData = data
-		message.StoredData = result
+		var data Data
+		data.Key = key
+		data.Value = result
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(message)
+		json.NewEncoder(w).Encode(data)
 	}
 }
 
@@ -58,7 +46,7 @@ func SetData(w http.ResponseWriter, r *http.Request) {
 	client := config.GetRedisClient()
 
 	body, err := ioutil.ReadAll(r.Body)
-	triggerError(err)
+	triggerErrorIfNotNil(err)
 
 	var data Data
 	json.Unmarshal(body, &data)
@@ -71,7 +59,7 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 	client := config.GetRedisClient()
 
 	body, err := ioutil.ReadAll(r.Body)
-	triggerError(err)
+	triggerErrorIfNotNil(err)
 
 	table := mux.Vars(r)["table"]
 	strData := customutil.FormatJsonForRedis(string(body))
@@ -87,14 +75,14 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 	* the count of the score as 1.
 	 */
 	count, err := client.ZCard(table).Result()
-	triggerError(err)
+	triggerErrorIfNotNil(err)
 
 	if count != 0 {
 		sets, err := client.ZRevRange(table, 0, 0).Result()
-		triggerError(err)
+		triggerErrorIfNotNil(err)
 
 		rank, err := client.ZRank(table, sets[0]).Result()
-		triggerError(err)
+		triggerErrorIfNotNil(err)
 
 		count = rank + 2
 	} else {
@@ -109,11 +97,46 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 	createResponseForRedisInsert(err,w)
 }
 
-func triggerError(err error) {
-	if err != nil {
-		debug.PrintStack()
-		panic(err)
+func ZRangeByScoreGetAll(w http.ResponseWriter, r *http.Request) {
+	client := config.GetRedisClient()
+
+	table := mux.Vars(r)["table"]
+
+	set, err := client.ZRangeByScore(table, &redis.ZRangeBy{
+		Min:    "-inf",
+		Max:    "+inf",
+		Offset: 0,
+		Count:  0,
+	}).Result()
+	if err == redis.Nil {
+		recordIsNil(err, w)
+	} else if err != nil {
+		triggerErr(err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(set)
 	}
+}
+
+func recordIsNil(err error, w http.ResponseWriter) {
+	fmt.Println("Data doesn't exists in Redis")
+	var status Status
+	status.StatusCode = 404
+	status.StatusDesc = "Record Not Found"
+
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(status)
+}
+
+func triggerErrorIfNotNil(err error) {
+	if err != nil {
+		triggerErr(err)
+	}
+}
+
+func triggerErr(err error) {
+	debug.PrintStack()
+	panic(err)
 }
 
 func createResponseForRedisInsert(err error, w http.ResponseWriter) {
