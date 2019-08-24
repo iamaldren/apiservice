@@ -77,13 +77,13 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 	strData := customutil.FormatJsonForRedis(string(body))
 
 	/**
-	* This block is use to get the current count in the Sorted Set in Redis.
-	* What we're doing here, is that the score each entry that we are adding inside the
-	* sorted set will be incremental of the previous entry.
+	* This block is use to get the current count of the Sorted Set in Redis.
+	* What we're doing here, is that the score of each entry that we're adding inside the
+	* sorted set will be incremental of the previous one.
 	*
 	* You will notice that if the count is not zero, we are getting the rank (index/position)
 	* of the latest entry in the Sorted Set, then we will add 2 to it to get the current score.
-	* Why 2? It's because the rank always starts from Zero, and it this sample we are started
+	* Why 2? It's because the rank always starts from Zero, and in this sample we started
 	* the count of the score as 1.
 	 */
 	count, err := client.ZCard(table).Result()
