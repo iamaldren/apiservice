@@ -118,6 +118,28 @@ func ZRangeByScoreGetAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ZRangeByScoreGet(w http.ResponseWriter, r *http.Request) {
+	client := config.GetRedisClient()
+
+	table := mux.Vars(r)["table"]
+	score := mux.Vars(r)["score"]
+
+	set, err := client.ZRangeByScore(table, &redis.ZRangeBy{
+		Min:    score,
+		Max:    score,
+		Offset: 0,
+		Count:  0,
+	}).Result()
+	if err == redis.Nil {
+		recordIsNil(err, w)
+	} else if err != nil {
+		triggerErr(err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(set[0])
+	}
+}
+
 func recordIsNil(err error, w http.ResponseWriter) {
 	fmt.Println("Data doesn't exists in Redis")
 	var status Status
