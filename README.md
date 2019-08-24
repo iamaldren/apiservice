@@ -40,10 +40,10 @@ I tried reading tutorials, and watched some videos but wasn't able to finish it 
  
  5. There will be 5 endpoints:
     * /v1/get/{key}
-    */v1/set
-    */v1/zset/{table}
-    */v1/zgetall/{table}
-    */v1/zget/{table}/{score}
+    * /v1/set
+    * /v1/zset/{table}
+    * /v1/zgetall/{table}
+    * /v1/zget/{table}/{score}
     
 ## TODO
 
