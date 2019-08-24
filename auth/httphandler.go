@@ -2,6 +2,7 @@ package auth
 
 import (
 	"apiservice/config"
+	"apiservice/customutil"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
@@ -28,7 +29,6 @@ type Data struct {
 
 func GetData(w http.ResponseWriter, r *http.Request) {
 	client := config.GetRedisClient()
-	defer client.Close()
 
 	data := mux.Vars(r)["data"]
 
@@ -56,18 +56,56 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 
 func SetData(w http.ResponseWriter, r *http.Request) {
 	client := config.GetRedisClient()
-	defer client.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		debug.PrintStack()
-		panic(err)
-	}
+	triggerError(err)
 
 	var data Data
 	json.Unmarshal(body, &data)
 
 	err = client.Set(data.Key, data.Value, 0).Err()
+	createResponseForRedisInsert(err,w)
+}
+
+func ZAddData(w http.ResponseWriter, r *http.Request) {
+	client := config.GetRedisClient()
+
+	body, err := ioutil.ReadAll(r.Body)
+	triggerError(err)
+
+	table := mux.Vars(r)["table"]
+	strData := customutil.FormatJsonForRedis(string(body))
+
+	count, err := client.ZCard(table).Result()
+	triggerError(err)
+
+	if count != 0 {
+		sets, err := client.ZRevRange(table, 0, 0).Result()
+		triggerError(err)
+
+		rank, err := client.ZRank(table, sets[0]).Result()
+		triggerError(err)
+
+		count = rank + 2
+	} else {
+		count = 1
+	}
+
+	err = client.ZAdd(table, &redis.Z{
+		Score: float64(count),
+		Member: strData,
+	}).Err()
+	createResponseForRedisInsert(err,w)
+}
+
+func triggerError(err error) {
+	if err != nil {
+		debug.PrintStack()
+		panic(err)
+	}
+}
+
+func createResponseForRedisInsert(err error, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Error encountered in storing data to Redis.")
 		var status Status
