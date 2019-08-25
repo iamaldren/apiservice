@@ -13,12 +13,12 @@ import (
 )
 
 type Status struct {
-	StatusCode int `json:"statusCode"`
+	StatusCode int    `json:"statusCode"`
 	StatusDesc string `json:"statusDesc"`
 }
 
 type Data struct {
-	Key string `json:"key"`
+	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
@@ -52,7 +52,7 @@ func SetData(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &data)
 
 	err = client.Set(data.Key, data.Value, 0).Err()
-	createResponseForRedisInsert(err,w)
+	createResponseForRedisInsert(err, w)
 }
 
 func ZAddData(w http.ResponseWriter, r *http.Request) {
@@ -91,10 +91,10 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 	// End of current count logic
 
 	err = client.ZAdd(table, redis.Z{
-		Score: float64(count),
+		Score:  float64(count),
 		Member: strData,
 	}).Err()
-	createResponseForRedisInsert(err,w)
+	createResponseForRedisInsert(err, w)
 }
 
 func ZRangeByScoreGetAll(w http.ResponseWriter, r *http.Request) {

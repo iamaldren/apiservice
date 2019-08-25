@@ -1,6 +1,6 @@
 package config
 
-import(
+import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"log"
@@ -11,9 +11,9 @@ var client *redis.Client
 
 func init() {
 	client = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr:     "localhost:6379",
 		Password: "aldren", //when empty means no password is set in Redis
-		DB: 0,
+		DB:       0,
 	})
 
 	pong, err := client.Ping().Result()
