@@ -90,7 +90,7 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 	}
 	// End of current count logic
 
-	err = client.ZAdd(table, &redis.Z{
+	err = client.ZAdd(table, redis.Z{
 		Score: float64(count),
 		Member: strData,
 	}).Err()
@@ -102,7 +102,7 @@ func ZRangeByScoreGetAll(w http.ResponseWriter, r *http.Request) {
 
 	table := mux.Vars(r)["table"]
 
-	set, err := client.ZRangeByScore(table, &redis.ZRangeBy{
+	set, err := client.ZRangeByScore(table, redis.ZRangeBy{
 		Min:    "-inf",
 		Max:    "+inf",
 		Offset: 0,
@@ -124,7 +124,7 @@ func ZRangeByScoreGet(w http.ResponseWriter, r *http.Request) {
 	table := mux.Vars(r)["table"]
 	score := mux.Vars(r)["score"]
 
-	set, err := client.ZRangeByScore(table, &redis.ZRangeBy{
+	set, err := client.ZRangeByScore(table, redis.ZRangeBy{
 		Min:    score,
 		Max:    score,
 		Offset: 0,
