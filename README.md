@@ -2,6 +2,8 @@
 
 A simple API that exposes 5 endpoints that do simple transactions on a Redis server.
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/iamaldren/apiservice)](https://goreportcard.com/report/github.com/iamaldren/apiservice)
+
 ## Background
 
 Ever since my friend and my colleague (2 different persons) introduced me to Golang, I've been quite drawn to it.
