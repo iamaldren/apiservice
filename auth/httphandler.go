@@ -63,7 +63,7 @@ func ZAddData(w http.ResponseWriter, r *http.Request) {
 
 	table := mux.Vars(r)["table"]
 	strData := customutil.FormatJsonForRedis(string(body))
-
+	
 	/**
 	* This block is use to get the current count of the Sorted Set in Redis.
 	* What we're doing here, is that the score of each entry that we're adding inside the
